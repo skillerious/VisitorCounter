@@ -24,6 +24,9 @@
       --navy-line: #28374e;
       --text-main: #e3e8ef;
       --text-dim:  #9aa4b1;
+      --digit-h:   44px;
+      --digit-w:   28px;
+      --digit-fs:  32px;
     }
 
     html, body {
@@ -36,7 +39,7 @@
     /* ── Outer shell ───────────────────────────────────────────── */
     .shell {
       position: relative;
-      width: 320px;
+      width: 300px;
       background: linear-gradient(160deg, #162030 0%, #0b1018 100%);
       border: 1px solid var(--navy-line);
       border-radius: 10px;
@@ -63,8 +66,8 @@
         to bottom,
         transparent 0px,
         transparent 3px,
-        rgba(0,0,0,.08) 3px,
-        rgba(0,0,0,.08) 4px
+        rgba(0,0,0,.06) 3px,
+        rgba(0,0,0,.06) 4px
       );
       pointer-events: none;
       z-index: 10;
@@ -73,7 +76,7 @@
 
     /* ── Inner content ─────────────────────────────────────────── */
     .inner {
-      padding: 20px 22px 18px;
+      padding: 16px 20px 14px;
       position: relative;
       z-index: 1;
     }
@@ -83,7 +86,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
 
     .label {
@@ -107,31 +110,29 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 16px;
-      height: 64px;
+      margin: 0 auto 14px;
+      height: var(--digit-h);
     }
 
     /* Glow halo behind number */
     .count-glow {
       position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse at center, rgba(81,189,249,.12) 0%, transparent 70%);
+      inset: -10px -20px;
+      background: radial-gradient(ellipse at center, rgba(81,189,249,.10) 0%, transparent 70%);
       border-radius: 8px;
     }
 
     .count-number {
       font-family: 'Orbitron', monospace;
       font-weight: 900;
-      font-size: 48px;
+      font-size: var(--digit-fs);
       letter-spacing: 2px;
       color: var(--cyan);
       text-shadow:
-        0 0 8px rgba(81,189,249,.8),
-        0 0 20px rgba(81,189,249,.4),
-        0 0 40px rgba(81,189,249,.15);
+        0 0 6px rgba(81,189,249,.7),
+        0 0 16px rgba(81,189,249,.3);
       position: relative;
       z-index: 1;
-      /* digit-roll animation applied in JS */
       transition: opacity .15s;
     }
 
@@ -142,7 +143,8 @@
       background-size: 200% 100%;
       animation: shimmer 1.4s infinite;
       border-radius: 4px;
-      min-width: 140px;
+      min-width: 180px;
+      height: var(--digit-h);
     }
 
     @keyframes shimmer {
@@ -150,18 +152,22 @@
       100% { background-position: -200% center; }
     }
 
-    /* Individual digit wrapper for roll effect */
-    .digit-reel {
-      display: inline-flex;
-      overflow: hidden;
-      height: 64px;
-      align-items: flex-end;
+    /* When JS populates digit columns, switch to flex */
+    .count-number.rolling {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
     }
 
     .digit-col {
       position: relative;
-      height: 64px;
+      width: var(--digit-w);
+      height: var(--digit-h);
       overflow: hidden;
+      background: rgba(81,189,249,.04);
+      border-radius: 4px;
+      border: 1px solid rgba(81,189,249,.08);
     }
 
     .digit-inner {
@@ -172,23 +178,24 @@
     }
 
     .digit-char {
-      height: 64px;
-      line-height: 64px;
+      width: var(--digit-w);
+      height: var(--digit-h);
+      line-height: var(--digit-h);
+      text-align: center;
       font-family: 'Orbitron', monospace;
       font-weight: 900;
-      font-size: 48px;
+      font-size: var(--digit-fs);
       color: var(--cyan);
       text-shadow:
-        0 0 8px rgba(81,189,249,.8),
-        0 0 20px rgba(81,189,249,.4),
-        0 0 40px rgba(81,189,249,.15);
+        0 0 6px rgba(81,189,249,.7),
+        0 0 16px rgba(81,189,249,.3);
     }
 
     /* ── Divider ───────────────────────────────────────────────── */
     .divider {
       height: 1px;
       background: linear-gradient(90deg, transparent, var(--navy-line) 20%, var(--navy-line) 80%, transparent);
-      margin: 0 0 12px;
+      margin: 0 0 10px;
     }
 
     /* ── Stats row ─────────────────────────────────────────────── */
@@ -206,25 +213,26 @@
       flex-direction: column;
       align-items: center;
       gap: 2px;
+      min-width: 70px;
     }
 
     .stat-value {
       color: var(--gold);
-      font-size: 12px;
+      font-size: 13px;
       font-weight: bold;
     }
 
     .stat-label {
-      font-size: 9px;
-      letter-spacing: 1px;
+      font-size: 8px;
+      letter-spacing: 1.5px;
       text-transform: uppercase;
-      opacity: .7;
+      opacity: .6;
     }
 
     /* status dot */
     .status-dot {
       display: inline-block;
-      width: 6px; height: 6px;
+      width: 5px; height: 5px;
       border-radius: 50%;
       background: #3ddc84;
       box-shadow: 0 0 6px #3ddc84;
@@ -299,7 +307,7 @@
       <!-- Count display -->
       <div class="count-wrap">
         <div class="count-glow"></div>
-        <div class="count-number loading" id="counter">000000</div>
+        <div class="count-number loading" id="counter">&nbsp;</div>
       </div>
 
       <div class="divider"></div>
@@ -322,25 +330,17 @@
   </div>
 
   <script>
-    // ─────────────────────────────────────────────────────────────
-    //  CONFIGURATION — update these to match your deployment
-    // ─────────────────────────────────────────────────────────────
     const WORKER_URL = 'https://pc-visit-counter.skillerious.workers.dev';
-    //  ^^^ Replace with your Cloudflare Worker URL after deploying worker.js
-    //
-    //  The worker exposes two endpoints:
-    //    GET  /hit   → increments count, returns { total, today }
-    //    GET  /peek  → reads count without incrementing, returns { total, today }
-    // ─────────────────────────────────────────────────────────────
 
     const counterEl   = document.getElementById('counter');
     const todayEl     = document.getElementById('today-count');
     const sessionEl   = document.getElementById('session-count');
 
-    // Avoid double-counting same browser session
     const SESSION_KEY = 'pc_visit_counted';
     const alreadyCounted = sessionStorage.getItem(SESSION_KEY);
     const endpoint = alreadyCounted ? '/peek' : '/hit';
+
+    const DIGIT_H = 44; // must match --digit-h
 
     async function loadCount() {
       try {
@@ -357,21 +357,20 @@
         sessionEl.textContent = '1';
 
       } catch (err) {
-        counterEl.className = '';
-        counterEl.style.cssText = 'font-family:monospace;font-size:13px;color:#e05050;';
+        counterEl.className = 'count-number';
+        counterEl.style.cssText = 'font-family:"Share Tech Mono",monospace;font-size:12px;color:#e05050;text-align:center;';
         counterEl.textContent = 'Counter offline';
         console.error('Counter fetch failed:', err);
       }
     }
 
-    // Digit-roll animation
     function animateCount(total) {
       const str = String(total).padStart(6, '0');
 
-      counterEl.className = '';
+      counterEl.className = 'count-number rolling';
       counterEl.textContent = '';
+      counterEl.removeAttribute('style');
 
-      // Build digit reels
       str.split('').forEach((char, i) => {
         const col   = document.createElement('div');
         col.className = 'digit-col';
@@ -379,8 +378,6 @@
         const inner = document.createElement('div');
         inner.className = 'digit-inner';
 
-        // Stack 0-9 + final digit
-        const digits = '0123456789';
         const target = parseInt(char, 10);
 
         for (let d = 0; d <= 9; d++) {
@@ -393,11 +390,10 @@
         col.appendChild(inner);
         counterEl.appendChild(col);
 
-        // Animate roll with staggered delay
         requestAnimationFrame(() => {
           setTimeout(() => {
             inner.style.transition = `transform ${0.55 + i * 0.06}s cubic-bezier(.22,.61,.36,1)`;
-            inner.style.transform  = `translateY(-${target * 64}px)`;
+            inner.style.transform  = `translateY(-${target * DIGIT_H}px)`;
           }, 80 + i * 60);
         });
       });
