@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile Visit Counter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    /* ── Reset & base ──────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold:      #c5a160;
+      --gold-lite: #e0c080;
+      --cyan:      #51bdf9;
+      --cyan-dim:  #2a6fa8;
+      --navy-deep: #080d14;
+      --navy-mid:  #0e151f;
+      --navy-card: #1b263b;
+      --navy-line: #28374e;
+      --text-main: #e3e8ef;
+      --text-dim:  #9aa4b1;
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: transparent;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+
+    /* ── Outer shell ───────────────────────────────────────────── */
+    .shell {
+      position: relative;
+      width: 320px;
+      background: linear-gradient(160deg, #162030 0%, #0b1018 100%);
+      border: 1px solid var(--navy-line);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow:
+        0 0 0 1px rgba(197,161,96,.18),
+        0 0 28px rgba(81,189,249,.07),
+        0 4px 32px rgba(0,0,0,.7);
+    }
+
+    /* Top gold accent bar */
+    .shell::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold) 30%, var(--gold-lite) 50%, var(--gold) 70%, transparent);
+    }
+
+    /* Scanline overlay */
+    .shell::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 3px,
+        rgba(0,0,0,.08) 3px,
+        rgba(0,0,0,.08) 4px
+      );
+      pointer-events: none;
+      z-index: 10;
+      border-radius: 10px;
+    }
+
+    /* ── Inner content ─────────────────────────────────────────── */
+    .inner {
+      padding: 20px 22px 18px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Header row */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .label {
+      font-family: 'Orbitron', monospace;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: var(--gold);
+      text-transform: uppercase;
+    }
+
+    .eye-icon {
+      width: 16px; height: 16px;
+      opacity: .7;
+      filter: drop-shadow(0 0 4px var(--cyan));
+    }
+
+    /* ── Count display ─────────────────────────────────────────── */
+    .count-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      height: 64px;
+    }
+
+    /* Glow halo behind number */
+    .count-glow {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, rgba(81,189,249,.12) 0%, transparent 70%);
+      border-radius: 8px;
+    }
+
+    .count-number {
+      font-family: 'Orbitron', monospace;
+      font-weight: 900;
+      font-size: 48px;
+      letter-spacing: 2px;
+      color: var(--cyan);
+      text-shadow:
+        0 0 8px rgba(81,189,249,.8),
+        0 0 20px rgba(81,189,249,.4),
+        0 0 40px rgba(81,189,249,.15);
+      position: relative;
+      z-index: 1;
+      /* digit-roll animation applied in JS */
+      transition: opacity .15s;
+    }
+
+    /* Loading skeleton */
+    .count-number.loading {
+      color: transparent;
+      background: linear-gradient(90deg, var(--navy-line) 25%, var(--navy-card) 50%, var(--navy-line) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 4px;
+      min-width: 140px;
+    }
+
+    @keyframes shimmer {
+      0%   { background-position: 200% center; }
+      100% { background-position: -200% center; }
+    }
+
+    /* Individual digit wrapper for roll effect */
+    .digit-reel {
+      display: inline-flex;
+      overflow: hidden;
+      height: 64px;
+      align-items: flex-end;
+    }
+
+    .digit-col {
+      position: relative;
+      height: 64px;
+      overflow: hidden;
+    }
+
+    .digit-inner {
+      display: flex;
+      flex-direction: column;
+      transform: translateY(0);
+      transition: transform .7s cubic-bezier(.22,.61,.36,1);
+    }
+
+    .digit-char {
+      height: 64px;
+      line-height: 64px;
+      font-family: 'Orbitron', monospace;
+      font-weight: 900;
+      font-size: 48px;
+      color: var(--cyan);
+      text-shadow:
+        0 0 8px rgba(81,189,249,.8),
+        0 0 20px rgba(81,189,249,.4),
+        0 0 40px rgba(81,189,249,.15);
+    }
+
+    /* ── Divider ───────────────────────────────────────────────── */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--navy-line) 20%, var(--navy-line) 80%, transparent);
+      margin: 0 0 12px;
+    }
+
+    /* ── Stats row ─────────────────────────────────────────────── */
+    .stats-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: var(--text-dim);
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .stat-value {
+      color: var(--gold);
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .stat-label {
+      font-size: 9px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      opacity: .7;
+    }
+
+    /* status dot */
+    .status-dot {
+      display: inline-block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #3ddc84;
+      box-shadow: 0 0 6px #3ddc84;
+      animation: pulse-dot 2s ease-in-out infinite;
+      margin-right: 4px;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: .5; transform: scale(.7); }
+    }
+
+    .live-label {
+      display: flex;
+      align-items: center;
+      font-size: 9px;
+      color: #3ddc84;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* ── Corner accents ────────────────────────────────────────── */
+    .corner {
+      position: absolute;
+      width: 10px; height: 10px;
+      z-index: 2;
+    }
+    .corner-tl { top: 4px;  left: 4px;  border-top: 1.5px solid var(--gold); border-left: 1.5px solid var(--gold); }
+    .corner-tr { top: 4px;  right: 4px; border-top: 1.5px solid var(--gold); border-right: 1.5px solid var(--gold); }
+    .corner-bl { bottom: 4px; left: 4px;  border-bottom: 1.5px solid var(--gold); border-left: 1.5px solid var(--gold); }
+    .corner-br { bottom: 4px; right: 4px; border-bottom: 1.5px solid var(--gold); border-right: 1.5px solid var(--gold); }
+
+    /* ── Error state ───────────────────────────────────────────── */
+    .error-msg {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: #e05050;
+      text-align: center;
+      padding: 8px 0;
+    }
+
+    /* ── Tick animation on count reveal ───────────────────────── */
+    @keyframes pop-in {
+      0%   { transform: scale(.85); opacity: 0; }
+      60%  { transform: scale(1.04); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .count-number.revealed {
+      animation: pop-in .5s cubic-bezier(.175,.885,.32,1.275) forwards;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <!-- Corner accents -->
+    <div class="corner corner-tl"></div>
+    <div class="corner corner-tr"></div>
+    <div class="corner corner-bl"></div>
+    <div class="corner corner-br"></div>
+
+    <div class="inner">
+      <!-- Header -->
+      <div class="header">
+        <span class="label">Profile Views</span>
+        <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="#51bdf9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </div>
+
+      <!-- Count display -->
+      <div class="count-wrap">
+        <div class="count-glow"></div>
+        <div class="count-number loading" id="counter">000000</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Stats row -->
+      <div class="stats-row">
+        <div class="stat-item">
+          <span class="stat-value" id="today-count">—</span>
+          <span class="stat-label">Today</span>
+        </div>
+        <div class="live-label">
+          <span class="status-dot"></span>LIVE
+        </div>
+        <div class="stat-item">
+          <span class="stat-value" id="session-count">1</span>
+          <span class="stat-label">This Session</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ─────────────────────────────────────────────────────────────
+    //  CONFIGURATION — update these to match your deployment
+    // ─────────────────────────────────────────────────────────────
+    const WORKER_URL = 'https://YOUR-WORKER.YOUR-USERNAME.workers.dev';
+    //  ^^^ Replace with your Cloudflare Worker URL after deploying worker.js
+    //
+    //  The worker exposes two endpoints:
+    //    GET  /hit   → increments count, returns { total, today }
+    //    GET  /peek  → reads count without incrementing, returns { total, today }
+    // ─────────────────────────────────────────────────────────────
+
+    const counterEl   = document.getElementById('counter');
+    const todayEl     = document.getElementById('today-count');
+    const sessionEl   = document.getElementById('session-count');
+
+    // Avoid double-counting same browser session
+    const SESSION_KEY = 'pc_visit_counted';
+    const alreadyCounted = sessionStorage.getItem(SESSION_KEY);
+    const endpoint = alreadyCounted ? '/peek' : '/hit';
+
+    async function loadCount() {
+      try {
+        const res  = await fetch(WORKER_URL + endpoint, { cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+
+        if (!alreadyCounted) {
+          sessionStorage.setItem(SESSION_KEY, '1');
+        }
+
+        animateCount(data.total);
+        todayEl.textContent  = formatNum(data.today ?? '—');
+        sessionEl.textContent = '1';
+
+      } catch (err) {
+        counterEl.className = '';
+        counterEl.style.cssText = 'font-family:monospace;font-size:13px;color:#e05050;';
+        counterEl.textContent = 'Counter offline';
+        console.error('Counter fetch failed:', err);
+      }
+    }
+
+    // Digit-roll animation
+    function animateCount(total) {
+      const str = String(total).padStart(6, '0');
+
+      counterEl.className = '';
+      counterEl.textContent = '';
+
+      // Build digit reels
+      str.split('').forEach((char, i) => {
+        const col   = document.createElement('div');
+        col.className = 'digit-col';
+
+        const inner = document.createElement('div');
+        inner.className = 'digit-inner';
+
+        // Stack 0-9 + final digit
+        const digits = '0123456789';
+        const target = parseInt(char, 10);
+
+        for (let d = 0; d <= 9; d++) {
+          const span = document.createElement('span');
+          span.className = 'digit-char';
+          span.textContent = d;
+          inner.appendChild(span);
+        }
+
+        col.appendChild(inner);
+        counterEl.appendChild(col);
+
+        // Animate roll with staggered delay
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            inner.style.transition = `transform ${0.55 + i * 0.06}s cubic-bezier(.22,.61,.36,1)`;
+            inner.style.transform  = `translateY(-${target * 64}px)`;
+          }, 80 + i * 60);
+        });
+      });
+    }
+
+    function formatNum(n) {
+      if (n === '—' || n == null) return '—';
+      return Number(n).toLocaleString();
+    }
+
+    loadCount();
+  </script>
+</body>
+</html>
