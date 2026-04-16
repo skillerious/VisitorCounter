@@ -1,6 +1,6 @@
 # Privé Cartel — Visit Counter
 
-A self-hosted profile visit counter matching your Torn City signature aesthetic.
+A self-hosted profile visit counter.
 
 ---
 
